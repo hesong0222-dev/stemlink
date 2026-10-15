@@ -1,0 +1,13 @@
+[project]
+name = "stemlink"
+version = "0.1.0"
+description = "유튜브 링크 붙여넣으면 보컬·드럼·베이스·나머지로 나눠주는 로컬 웹 앱"
+requires-python = ">=3.10,<3.13"
+dependencies = ["demucs>=4.0.1", "yt-dlp", "soundfile"]
+
+[project.scripts]
+stemlink = "stemlink.app:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

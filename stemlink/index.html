@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>stemlink</title>
+<style>
+:root{--bg:#f6f8fb;--card:#fff;--ink:#1f2430;--sub:#6b7280;--acc:#2f80ed;--line:#e5e9f0}
+@media (prefers-color-scheme:dark){:root{--bg:#111318;--card:#1b1e25;--ink:#e8eaf0;--sub:#9aa3b2;--acc:#5aa2ff;--line:#2a2f3a}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,"Apple SD Gothic Neo",sans-serif}
+main{max-width:640px;margin:48px auto;padding:0 16px}
+h1{font-size:28px;margin:0 0 4px} p.sub{color:var(--sub);margin:0 0 24px}
+form{display:flex;gap:8px} input{flex:1;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font-size:15px}
+button{padding:12px 18px;border:0;border-radius:10px;background:var(--acc);color:#fff;font-weight:600;font-size:15px;cursor:pointer}
+button:disabled{opacity:.5}
+#status{margin:20px 0;color:var(--sub)} .stem{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0}
+.stem b{display:inline-block;width:80px} audio{width:100%;margin-top:6px} a{color:var(--acc)}
+</style></head>
+<body><main>
+<h1>stemlink</h1>
+<p class="sub">유튜브 링크 넣으면 보컬 · 드럼 · 베이스 · 나머지로 나눠줌</p>
+<form id="f"><input id="u" placeholder="https://www.youtube.com/watch?v=..." required><button id="b">나누기</button></form>
+<div id="status"></div><div id="out"></div>
+</main>
+<script>
+const names={vocals:"보컬",drums:"드럼",bass:"베이스",other:"나머지"};
+const f=document.getElementById('f'),b=document.getElementById('b'),st=document.getElementById('status'),out=document.getElementById('out');
+f.onsubmit=async e=>{e.preventDefault();b.disabled=true;out.innerHTML='';st.textContent='시작하는 중…';
+  const r=await fetch('/api/split',{method:'POST',body:JSON.stringify({url:document.getElementById('u').value})});const j=await r.json();
+  if(j.error){st.textContent=j.error;b.disabled=false;return}
+  const t0=Date.now();
+  const poll=async()=>{const s=await (await fetch('/api/job/'+j.id)).json();
+    st.textContent=(s.title?s.title+' — ':'')+s.step+(s.step==='완료'||s.step==='실패'?'':' · '+Math.round((Date.now()-t0)/1000)+'초');
+    if(s.step==='완료'){b.disabled=false;out.innerHTML=Object.entries(s.stems).map(([k,v])=>`<div class="stem"><b>${names[k]||k}</b> <a href="${v}" download>받기</a><audio controls src="${v}"></audio></div>`).join('');return}
+    if(s.step==='실패'){b.disabled=false;st.textContent='실패: '+(s.error||'');return}
+    setTimeout(poll,1500)};poll()};
+</script>
+</body></html>
